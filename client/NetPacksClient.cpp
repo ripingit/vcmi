@@ -679,7 +679,9 @@ void BattleStackAttacked::applyFirstCl(CClient *cl)
 	std::vector<BattleStackAttacked> bsa;
 	bsa.push_back(*this);
 
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,bsa);
+	std::vector<MetaString> battleLog;
+
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked, bsa, battleLog);
 }
 
 void BattleAttack::applyFirstCl(CClient *cl)
@@ -696,7 +698,8 @@ void BattleAttack::applyFirstCl(CClient *cl)
 
 void BattleAttack::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,bsa);
+	std::vector<MetaString> battleLog;
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked, bsa, battleLog);
 }
 
 void StartAction::applyFirstCl(CClient *cl)
@@ -713,12 +716,12 @@ void BattleSpellCast::applyCl(CClient *cl)
 void SetStackEffect::applyCl(CClient *cl)
 {
 	//informing about effects
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksEffectsSet,*this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksEffectsSet, *this);
 }
 
 void StacksInjured::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,stacks);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked, stacks, battleLog);
 }
 
 void BattleResultsApplied::applyCl(CClient *cl)
