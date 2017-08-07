@@ -50,7 +50,7 @@ std::pair< std::vector<BattleHex>, int > BattleInfo::getPath(BattleHex start, Ba
 ui32 BattleInfo::calculateDmg(const CStack * attacker, const CStack * defender,
 	bool shooting, ui8 charge, bool lucky, bool unlucky, bool deathBlow, bool ballistaDoubleDmg, CRandomGenerator & rand)
 {
-	BattleAttackInfo bai(attacker, defender, shooting);
+	BattleAttackInfo bai(attacker, defender, attacker, defender, shooting);
 	bai.chargedFields = charge;
 	bai.luckyHit = lucky;
 	bai.unluckyHit = unlucky;
@@ -92,7 +92,6 @@ CStack * BattleInfo::generateNewStack(const CStackInstance & base, ui8 side, Slo
 
 	auto ret = new CStack(&base, owner, stackID, side, slot);
 	ret->position = getAvaliableHex(base.getCreatureID(), side, position); //TODO: what if no free tile on battlefield was found?
-	ret->state.insert(EBattleStackState::ALIVE); //alive state indication
 	return ret;
 }
 
@@ -102,7 +101,6 @@ CStack * BattleInfo::generateNewStack(const CStackBasicDescriptor & base, ui8 si
 	PlayerColor owner = sides[side].color;
 	auto ret = new CStack(&base, owner, stackID, side, slot);
 	ret->position = position;
-	ret->state.insert(EBattleStackState::ALIVE); //alive state indication
 	return ret;
 }
 
