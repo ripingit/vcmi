@@ -673,17 +673,6 @@ void BattleStackMoved::applyFirstCl(CClient *cl)
 	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStackMoved,movedStack,tilesToMove,distance);
 }
 
-//void BattleStackAttacked::(CClient *cl)
-void BattleStackAttacked::applyFirstCl(CClient *cl)
-{
-	std::vector<BattleStackAttacked> bsa;
-	bsa.push_back(*this);
-
-	std::vector<MetaString> battleLog;
-
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked, bsa, battleLog);
-}
-
 void BattleAttack::applyFirstCl(CClient *cl)
 {
 	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleAttack,this);
@@ -698,7 +687,6 @@ void BattleAttack::applyFirstCl(CClient *cl)
 
 void BattleAttack::applyCl(CClient *cl)
 {
-	std::vector<MetaString> battleLog;
 	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked, bsa, battleLog);
 }
 
@@ -731,14 +719,13 @@ void BattleResultsApplied::applyCl(CClient *cl)
 	INTERFACE_CALL_IF_PRESENT(PlayerColor::SPECTATOR, battleResultsApplied);
 }
 
-void StacksHealedOrResurrected::applyCl(CClient * cl)
+void BattleStacksChanged::applyCl(CClient * cl)
 {
-	std::vector<std::pair<ui32, ui32> > shiftedHealed;
-	for(auto & elem : healedStacks)
-	{
-		shiftedHealed.push_back(std::make_pair(elem.stackId, (ui32)elem.delta));
-	}
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksHealedRes, shiftedHealed, lifeDrain, tentHealing, drainedFrom);
+	std::vector<ui32> ids;
+	for(auto & elem : changedStacks)
+		ids.push_back(elem.stackId);
+
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksChanged, ids, customEffects, battleLog);
 }
 
 void ObstaclesRemoved::applyCl(CClient *cl)

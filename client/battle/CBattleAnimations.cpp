@@ -143,7 +143,7 @@ CAttackAnimation::CAttackAnimation(CBattleInterface *_owner, const CStack *attac
 
 	assert(attackedStack || isCatapultAttack);
 	UNUSED(isCatapultAttack);
-	attackingStackPosBeforeReturn = attackingStack->position;
+	attackingStackPosBeforeReturn = attackingStack->getPosition();
 }
 
 CDefenceAnimation::CDefenceAnimation(StackAttackedInfo _attackedInfo, CBattleInterface * _owner)
@@ -189,9 +189,9 @@ bool CDefenceAnimation::init()
 
 
 	//reverse unit if necessary
-	if (attacker && owner->getCurrentPlayerInterface()->cb->isToReverse(stack->position, attacker->position, owner->creDir[stack->ID], attacker->doubleWide(), owner->creDir[attacker->ID]))
+	if(attacker && owner->getCurrentPlayerInterface()->cb->isToReverse(stack->getPosition(), attacker->getPosition(), owner->creDir[stack->ID], attacker->doubleWide(), owner->creDir[attacker->ID]))
 	{
-		owner->addNewAnim(new CReverseAnimation(owner, stack, stack->position, true));
+		owner->addNewAnim(new CReverseAnimation(owner, stack, stack->getPosition(), true));
 		return false;
 	}
 	//unit reversed
@@ -231,22 +231,20 @@ std::string CDefenceAnimation::getMySound()
 {
 	if(killed)
 		return battle_sound(stack->getCreature(), killed);
-
-	if (vstd::contains(stack->state, EBattleStackState::DEFENDING_ANIM))
+	else if(stack->stackState.defendingAnim)
 		return battle_sound(stack->getCreature(), defend);
-
-	return battle_sound(stack->getCreature(), wince);
+	else
+		return battle_sound(stack->getCreature(), wince);
 }
 
 CCreatureAnim::EAnimType CDefenceAnimation::getMyAnimType()
 {
 	if(killed)
 		return CCreatureAnim::DEATH;
-
-	if (vstd::contains(stack->state, EBattleStackState::DEFENDING_ANIM))
+	else if(stack->stackState.defendingAnim)
 		return CCreatureAnim::DEFENCE;
-
-	return CCreatureAnim::HITTED;
+	else
+		return CCreatureAnim::HITTED;
 }
 
 void CDefenceAnimation::startAnimation()
@@ -317,7 +315,7 @@ bool CMeleeAttackAnimation::init()
 		return false;
 	}
 
-	bool toReverse = owner->getCurrentPlayerInterface()->cb->isToReverse(attackingStackPosBeforeReturn, attackedStack->position, owner->creDir[stack->ID], attackedStack->doubleWide(), owner->creDir[attackedStack->ID]);
+	bool toReverse = owner->getCurrentPlayerInterface()->cb->isToReverse(attackingStackPosBeforeReturn, attackedStack->getPosition(), owner->creDir[stack->ID], attackedStack->doubleWide(), owner->creDir[attackedStack->ID]);
 
 	if (toReverse)
 	{
@@ -342,7 +340,7 @@ bool CMeleeAttackAnimation::init()
 	int mutPos = BattleHex::mutualPosition(attackingStackPosBeforeReturn, dest);
 	if(mutPos == -1 && attackingStack->doubleWide())
 	{
-		mutPos = BattleHex::mutualPosition(attackingStackPosBeforeReturn + revShiftattacker, attackedStack->position);
+		mutPos = BattleHex::mutualPosition(attackingStackPosBeforeReturn + revShiftattacker, attackedStack->getPosition());
 	}
 	if (mutPos == -1 && attackedStack->doubleWide())
 	{
@@ -522,7 +520,7 @@ CMovementAnimation::CMovementAnimation(CBattleInterface *_owner, const CStack *_
     : CBattleStackAnimation(_owner, _stack),
       destTiles(_destTiles),
       curentMoveIndex(0),
-      oldPos(stack->position),
+      oldPos(stack->getPosition()),
       begX(0), begY(0),
       distanceX(0), distanceY(0),
       timeToMove(0.0),
@@ -687,9 +685,9 @@ bool CShootingAnimation::init()
 	}
 
 	//reverse unit if necessary
-	if (attackingStack && attackedStack && owner->getCurrentPlayerInterface()->cb->isToReverse(attackingStack->position, attackedStack->position, owner->creDir[attackingStack->ID], attackingStack->doubleWide(), owner->creDir[attackedStack->ID]))
+	if (attackingStack && attackedStack && owner->getCurrentPlayerInterface()->cb->isToReverse(attackingStack->getPosition(), attackedStack->getPosition(), owner->creDir[attackingStack->ID], attackingStack->doubleWide(), owner->creDir[attackedStack->ID]))
 	{
-		owner->addNewAnim(new CReverseAnimation(owner, attackingStack, attackingStack->position, true));
+		owner->addNewAnim(new CReverseAnimation(owner, attackingStack, attackingStack->getPosition(), true));
 		return false;
 	}
 
@@ -736,7 +734,7 @@ bool CShootingAnimation::init()
 	int multiplier = spi.reverse ? -1 : 1;
 
 	double projectileAngle = atan2(fabs((double)destPos.y - fromPos.y), fabs((double)destPos.x - fromPos.x));
-	if(shooter->position < dest)
+	if(shooter->getPosition() < dest)
 		projectileAngle = -projectileAngle;
 
 	// Calculate projectile start position. Offsets are read out of the CRANIM.TXT.

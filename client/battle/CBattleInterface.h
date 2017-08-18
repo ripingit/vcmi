@@ -48,6 +48,7 @@ struct BattleHex;
 struct InfoAboutHero;
 struct BattleAction;
 class CBattleGameInterface;
+struct CustomEffectInfo;
 
 /// Small struct which contains information about the id of the attacked stack, the damage dealt,...
 struct StackAttackedInfo
@@ -342,6 +343,7 @@ public:
 	void castThisSpell(SpellID spellID); //called when player has chosen a spell from spellbook
 
 	void displayBattleLog(const std::vector<MetaString> & battleLog);
+	void displayCustomEffects(const std::vector<CustomEffectInfo> & customEffects);
 
 	void displayEffect(ui32 effect, int destTile); //displays custom effect on the battlefield
 
