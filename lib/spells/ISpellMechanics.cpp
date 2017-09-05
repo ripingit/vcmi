@@ -60,10 +60,10 @@ public:
 
 	std::unique_ptr<Mechanics> create(const CBattleInfoCallback * cb, Mode mode, const Caster * caster) const override
 	{
-		std::unique_ptr<BaseMechanics> ret(new T(spell, cb, caster));
+		T * ret = new T(spell, cb, caster);
 		ret->mode = mode;
 		ret->targetCondition = targetCondition;
-		return ret;
+		return std::unique_ptr<Mechanics>(ret);
 	}
 private:
 	std::shared_ptr<TargetCondition> targetCondition;
@@ -74,10 +74,10 @@ class CustomMechanicsFactory : public ISpellMechanicsFactory
 public:
 	std::unique_ptr<Mechanics> create(const CBattleInfoCallback * cb, Mode mode, const Caster * caster) const override
 	{
-		std::unique_ptr<BaseMechanics> ret(new CustomSpellMechanics(spell, cb, caster, effects));
+		CustomSpellMechanics * ret = new CustomSpellMechanics(spell, cb, caster, effects);
 		ret->mode = mode;
 		ret->targetCondition = targetCondition;
-		return ret;
+		return std::unique_ptr<Mechanics>(ret);
 	}
 protected:
 	std::shared_ptr<effects::Effects> effects;

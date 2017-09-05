@@ -100,6 +100,7 @@ set(lib_SRCS
 		spells/CSpellHandler.cpp
 		spells/ISpellMechanics.cpp
 		spells/Problem.cpp
+		spells/TargetCondition.cpp
 		spells/ViewSpellInt.cpp
 
 		spells/effects/Clone.cpp
@@ -251,6 +252,7 @@ set(lib_HEADERS
 		spells/Magic.h
 		spells/SpellMechanics.h
 		spells/Problem.h
+		spells/TargetCondition.h
 		spells/ViewSpellInt.h
 
 		spells/effects/Clone.h
