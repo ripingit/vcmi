@@ -38,6 +38,11 @@ bool Effect::applicable(Problem & problem, const Mechanics * m, const Target & a
 	return true;
 }
 
+void Effect::apply(IBattleState * battleState, const Mechanics * m, const BattleCast & p, const EffectTarget & target) const
+{
+	//todo: make this pure virtual
+}
+
 void Effect::serializeJson(JsonSerializeFormat & handler)
 {
 	handler.serializeBool("automatic", automatic, true);

@@ -114,12 +114,12 @@ EffectTarget StackEffect::transformTarget(const Mechanics * m, const Target & ai
 
 	Destination mainDestination = spellTargetCopy.front();
 
-	std::set<const CStack *> targets;
+	std::set<const battle::Unit *> targets;
 
 	if(targetInfo.massive)
 	{
 		//ignore spellTarget and add all stacks
-		TStacks stacks = m->cb->battleGetStacksIf(mainFilter);
+		auto stacks = m->cb->battleGetUnitsIf(mainFilter);
 		for(auto stack : stacks)
 			targets.insert(stack);
 	}

@@ -82,10 +82,11 @@ void Clone::apply(const PacketSender * server, RNG & rng, const Mechanics * m, c
 		server->sendAndApply(&ssp);
 
 		SetStackEffect sse;
-		sse.stacks.push_back(bsa.newStackID);
 		Bonus lifeTimeMarker(Bonus::N_TURNS, Bonus::NONE, Bonus::SPELL_EFFECT, 0, m->owner->id.num);
 		lifeTimeMarker.turnsRemain = p.effectDuration;
-		sse.effect.push_back(lifeTimeMarker);
+		std::vector<Bonus> buffer;
+		buffer.push_back(lifeTimeMarker);
+		sse.toAdd.push_back(std::make_pair(bsa.newStackID, buffer));
 		server->sendAndApply(&sse);
 	}
 }

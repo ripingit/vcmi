@@ -35,51 +35,45 @@ Timed::Timed(const int level)
 
 Timed::~Timed() = default;
 
+
+void Timed::convertBonus(const Mechanics * m, int32_t & duration, std::vector<Bonus> & converted) const
+{
+	int32_t maxDuration = 0;
+
+	for(const std::shared_ptr<Bonus> & b : bonus)
+	{
+		Bonus nb(*b);
+
+		//use configured duration if present
+		if(nb.turnsRemain == 0)
+			nb.turnsRemain = duration;
+		vstd::amax(maxDuration, nb.turnsRemain);
+
+		nb.sid = m->owner->id; //for all
+		nb.source = Bonus::SPELL_EFFECT;//for all
+
+		//fix to original config: shield should display damage reduction
+		if((nb.sid == SpellID::SHIELD || nb.sid == SpellID::AIR_SHIELD) && (nb.type == Bonus::GENERAL_DAMAGE_REDUCTION))
+			nb.val = 100 - nb.val;
+		//we need to know who cast Bind
+		else if(nb.sid == SpellID::BIND && nb.type == Bonus::BIND_EFFECT && m->casterStack)
+			nb.additionalInfo = m->casterStack->ID;
+
+		converted.push_back(nb);
+	}
+
+	//if all spell effects have special duration, use it later for special bonuses
+	duration = maxDuration;
+}
+
 void Timed::apply(const PacketSender * server, RNG & rng, const Mechanics * m, const BattleCast & p, const EffectTarget & target) const
 {
 	SetStackEffect sse;
 	//get default spell duration (spell power with bonuses for heroes)
 	si32 duration = p.effectDuration;
-	//generate actual stack bonuses
-	//TODO: make cumulative a parameter of SetStackEffect
 
-	auto addUniqueBonus = [&sse, this](Bonus && b, const IStackState * s)
-	{
-		if(cumulative)
-			sse.cumulativeUniqueBonuses.push_back(std::pair<ui32, Bonus>(s->unitId(), b));
-		else
-			sse.uniqueBonuses.push_back(std::pair<ui32, Bonus>(s->unitId(), b));
-	};
-
-	std::vector<Bonus> & converted = cumulative ? sse.cumulativeEffects : sse.effect;
-	{
-		si32 maxDuration = 0;
-
-		for(const std::shared_ptr<Bonus> & b : bonus)
-		{
-			Bonus nb(*b);
-
-			//use configured duration if present
-			if(nb.turnsRemain == 0)
-				nb.turnsRemain = duration;
-			vstd::amax(maxDuration, nb.turnsRemain);
-
-			nb.sid = m->owner->id; //for all
-			nb.source = Bonus::SPELL_EFFECT;//for all
-
-			//fix to original config: shield should display damage reduction
-			if((nb.sid == SpellID::SHIELD || nb.sid == SpellID::AIR_SHIELD) && (nb.type == Bonus::GENERAL_DAMAGE_REDUCTION))
-				nb.val = 100 - nb.val;
-			//we need to know who cast Bind
-			else if(nb.sid == SpellID::BIND && nb.type == Bonus::BIND_EFFECT && m->casterStack)
-				nb.additionalInfo = m->casterStack->ID;
-
-			converted.push_back(nb);
-		}
-
-		//if all spell effects have special duration, use it later for special bonuses
-		duration = maxDuration;
-	}
+	std::vector<Bonus> converted;
+    convertBonus(m, duration, converted);
 
 	std::shared_ptr<Bonus> bonus = nullptr;
 	auto casterHero = dynamic_cast<const CGHeroInstance *>(m->caster);
@@ -89,6 +83,9 @@ void Timed::apply(const PacketSender * server, RNG & rng, const Mechanics * m, c
 
 	for(auto & t : target)
 	{
+		std::vector<Bonus> buffer;
+		std::copy(converted.begin(), converted.end(), std::back_inserter(buffer));
+
 		const IStackState * affected = t.stackValue;
 		if(!affected)
 		{
@@ -100,7 +97,6 @@ void Timed::apply(const PacketSender * server, RNG & rng, const Mechanics * m, c
 			continue;
 
 		si32 power = 0;
-		sse.stacks.push_back(affected->unitId());
 
 		//Apply hero specials - peculiar enchants
 		const auto tier = std::max(affected->creatureLevel(), 1); //don't divide by 0 for certain creatures (commanders, war machines)
@@ -131,14 +127,14 @@ void Timed::apply(const PacketSender * server, RNG & rng, const Mechanics * m, c
 					specialBonus.turnsRemain = duration;
 
 					//additional premy to given effect
-					addUniqueBonus(std::move(specialBonus), affected);
+					buffer.push_back(specialBonus);
 				}
 				break;
 			case 1: //only Coronius as yet
 				power = std::max(5 - tier, 0);
 				Bonus specialBonus(Bonus::N_TURNS, Bonus::PRIMARY_SKILL, Bonus::SPELL_EFFECT, power, m->owner->id, PrimarySkill::ATTACK);
 				specialBonus.turnsRemain = duration;
-				addUniqueBonus(std::move(specialBonus), affected);
+				buffer.push_back(specialBonus);
 				break;
 			}
 		}
@@ -147,13 +143,24 @@ void Timed::apply(const PacketSender * server, RNG & rng, const Mechanics * m, c
 			int damagePercent = casterHero->level * casterHero->valOfBonuses(Bonus::SPECIAL_BLESS_DAMAGE, m->owner->id.toEnum()) / tier;
 			Bonus specialBonus(Bonus::N_TURNS, Bonus::CREATURE_DAMAGE, Bonus::SPELL_EFFECT, damagePercent, m->owner->id, 0, Bonus::PERCENT_TO_ALL);
 			specialBonus.turnsRemain = duration;
-			addUniqueBonus(std::move(specialBonus), affected);
+			buffer.push_back(specialBonus);
 		}
+
+        if(cumulative)
+			sse.toAdd.push_back(std::make_pair(affected->unitId(), buffer));
+		else
+			sse.toUpdate.push_back(std::make_pair(affected->unitId(), buffer));
 	}
 
-	if(!sse.stacks.empty())
+	if(!(sse.toAdd.empty() && sse.toUpdate.empty()))
 		server->sendAndApply(&sse);
 }
+
+void Timed::apply(IBattleState * battleState, const Mechanics * m, const BattleCast & p, const EffectTarget & target) const
+{
+
+}
+
 
 void Timed::serializeJsonEffect(JsonSerializeFormat & handler)
 {

@@ -15,6 +15,8 @@
 
 #include "../../NetPacks.h"
 #include "../../CStack.h"
+#include "../../battle/IBattleState.h"
+#include "../../battle/CBattleInfoCallback.h"
 
 static const std::string EFFECT_NAME = "core:damage";
 
@@ -44,7 +46,7 @@ void Damage::apply(const PacketSender * server, RNG & rng, const Mechanics * m, 
 
 	for(auto & t : target)
 	{
-		auto s = t.stackValue;
+		auto s = m->cb->battleGetStackByID(t.stackValue->unitId());
 		if(s && s->alive())
 		{
 			BattleStackAttacked bsa;
@@ -98,6 +100,26 @@ void Damage::apply(const PacketSender * server, RNG & rng, const Mechanics * m, 
 		}
 
 		server->sendAndApply(&stacksInjured);
+	}
+}
+
+void Damage::apply(IBattleState * battleState, const Mechanics * m, const BattleCast & p, const EffectTarget & target) const
+{
+	const int32_t rawDamage = p.getEffectValue();
+
+	for(auto & t : target)
+	{
+		const battle::Unit * unit = t.stackValue;
+		if(unit && unit->alive())
+		{
+			int32_t amount = m->owner->adjustRawDamage(m->caster, unit, rawDamage);
+
+			CStackStateInfo info;
+			CStackState state = unit->asquire();
+			state.damage(amount);
+			state.toInfo(info);
+			battleState->updateUnit(info);
+		}
 	}
 }
 

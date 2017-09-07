@@ -11,6 +11,8 @@
 #pragma once
 #include "CBattleInfoEssentials.h"
 
+class CStackStateInfo;
+
 class DLL_LINKAGE IBattleInfo
 {
 public:
@@ -21,6 +23,8 @@ public:
 	virtual int32_t getActiveStackID() const = 0;
 
 	virtual TStacks getStacksIf(TStackFilter predicate) const = 0;
+
+	virtual battle::Units getUnitsIf(battle::UnitFilter predicate) const = 0;
 
 	virtual BFieldType getBattlefieldType() const = 0;
 	virtual ETerrainType getTerrainType() const = 0;
@@ -47,5 +51,8 @@ public:
 
 class IBattleState : public IBattleInfo
 {
+public:
 	//TODO: add non-const API and use in game state
+
+	virtual void updateUnit(const CStackStateInfo & changes) = 0;
 };

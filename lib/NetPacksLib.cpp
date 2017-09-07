@@ -1569,36 +1569,30 @@ DLL_LINKAGE void SetStackEffect::applyGs(CGameState *gs)
 		}
 	};
 
-	for(ui32 id : stacks)
+	for(auto stackData : toUpdate)
 	{
-		CStack *s = gs->curB->getStack(id);
-		if(s)
+		CStack * s = gs->curB->getStack(stackData.first);
+		if(!s)
 		{
-			for(const Bonus & fromEffect : effect)
-				processEffect(s, fromEffect, false);
-			for(const Bonus & fromEffect : cumulativeEffects)
-				processEffect(s, fromEffect, true);
+			logNetwork->error("Cannot find stack %d", stackData.first);
+			continue;
 		}
-		else
-			logNetwork->error("Cannot find stack %d", id);
+
+		for(const Bonus & bonus : stackData.second)
+			processEffect(s, bonus, false);
 	}
 
-	for(auto & para : uniqueBonuses)
+	for(auto stackData : toAdd)
 	{
-		CStack *s = gs->curB->getStack(para.first);
-		if(s)
-			processEffect(s, para.second, false);
-		else
-			logNetwork->error("Cannot find stack %d", para.first);
-	}
+		CStack * s = gs->curB->getStack(stackData.first);
+		if(!s)
+		{
+			logNetwork->error("Cannot find stack %d", stackData.first);
+			continue;
+		}
 
-	for(auto & para : cumulativeUniqueBonuses)
-	{
-		CStack *s = gs->curB->getStack(para.first);
-		if(s)
-			processEffect(s, para.second, true);
-		else
-			logNetwork->error("Cannot find stack %d", para.first);
+		for(const Bonus & bonus : stackData.second)
+			processEffect(s, bonus, true);
 	}
 }
 
@@ -1611,39 +1605,7 @@ DLL_LINKAGE void StacksInjured::applyGs(CGameState *gs)
 DLL_LINKAGE void BattleStacksChanged::applyGs(CGameState *gs)
 {
 	for(auto & elem : changedStacks)
-	{
-		CStack * changedStack = gs->curB->getStack(elem.stackId, false);
-		assert(changedStack);
-
-		//checking if we resurrect a stack that is under a living stack
-		auto accessibility = gs->curB->getAccesibility();
-
-		if(!changedStack->alive() && !accessibility.accessible(changedStack->getPosition(), changedStack))
-		{
-			logNetwork->error("Cannot resurrect %s because hex %d is occupied!", changedStack->nodeName(), changedStack->getPosition().hex);
-			return; //position is already occupied
-		}
-
-		//applying changes
-		bool resurrected = !changedStack->alive(); //indicates if stack is resurrected or just healed
-
-		changedStack->stackState.fromInfo(elem);
-
-		if(resurrected)
-		{
-			//removing all spells effects
-			auto selector = [](const Bonus * b)
-			{
-				//Special case: DISRUPTING_RAY is "immune" to dispell
-				//Other even PERMANENT effects can be removed
-				if(b->source == Bonus::SPELL_EFFECT)
-					return b->sid != SpellID::DISRUPTING_RAY;
-				else
-					return false;
-			};
-			changedStack->popBonuses(selector);
-		}
-	}
+		gs->curB->updateUnit(elem);
 }
 
 DLL_LINKAGE void ObstaclesRemoved::applyGs(CGameState *gs)

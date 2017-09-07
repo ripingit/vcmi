@@ -371,10 +371,10 @@ CStackState::CStackState(const IUnitInfo * unit_, const IUnitBonus * bonus_)
 	movedThisTurn(false),
 	summoned(false),
 	waiting(false),
-	casts(this),
-	counterAttacks(this),
-	health(this),
-	shots(this),
+	casts(bonus_),
+	counterAttacks(bonus_),
+	health(unit_),
+	shots(bonus_),
 	cloneID(-1),
 	position()
 {

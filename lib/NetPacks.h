@@ -1618,28 +1618,16 @@ struct SetStackEffect : public CPackForClient
 	DLL_LINKAGE void applyGs(CGameState * gs);
 	void applyCl(CClient * cl);
 
-	std::vector<ui32> stacks; //affected stacks (IDs)
-
-	//regular effects
-	std::vector<Bonus> effect; //bonuses to apply
-	std::vector<std::pair<ui32, Bonus> > uniqueBonuses; //bonuses per single stack
-
-	//cumulative effects
-	std::vector<Bonus> cumulativeEffects; //bonuses to apply
-	std::vector<std::pair<ui32, Bonus> > cumulativeUniqueBonuses; //bonuses per single stack
-
+	std::vector<std::pair<ui32, std::vector<Bonus>>> toAdd;
+	std::vector<std::pair<ui32, std::vector<Bonus>>> toUpdate;
 	std::vector<std::pair<ui32, std::vector<Bonus>>> toRemove;
 
 	std::vector<MetaString> battleLog;
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & stacks;
-		h & effect;
-		h & uniqueBonuses;
-		h & cumulativeEffects;
-		h & cumulativeUniqueBonuses;
+		h & toAdd;
+		h & toUpdate;
 		h & toRemove;
-		h & battleLog;
 	}
 };
 

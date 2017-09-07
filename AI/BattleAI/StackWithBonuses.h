@@ -19,8 +19,8 @@ class StackWithBonuses : public IBonusBearer, public IUnitBonus
 public:
 	CStackState state;
 
-	mutable std::vector<Bonus> bonusesToAdd;
-	mutable std::vector<Bonus> bonusesToUpdate;
+	std::vector<Bonus> bonusesToAdd;
+	std::vector<Bonus> bonusesToUpdate;
 
 	StackWithBonuses(const CStackState * Stack);
 
@@ -36,7 +36,13 @@ public:
 class HypotheticBattle : public BattleProxy
 {
 public:
+	std::map<uint32_t, std::shared_ptr<StackWithBonuses>> stackStates;
+
 	HypotheticBattle(Subject realBattle);
 
-	std::map<uint32_t, std::shared_ptr<StackWithBonuses>> stackStates;
+	std::shared_ptr<StackWithBonuses> getForUpdate(uint32_t id);
+
+	battle::Units getUnitsIf(battle::UnitFilter predicate) const override;
+
+	void updateUnit(const CStackStateInfo & changes) override;
 };

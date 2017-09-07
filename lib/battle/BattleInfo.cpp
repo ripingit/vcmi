@@ -692,6 +692,14 @@ TStacks BattleInfo::getStacksIf(TStackFilter predicate) const
 	return ret;
 }
 
+battle::Units BattleInfo::getUnitsIf(battle::UnitFilter predicate) const
+{
+	battle::Units ret;
+	vstd::copy_if(stacks, std::back_inserter(ret), predicate);
+	return ret;
+}
+
+
 BFieldType BattleInfo::getBattlefieldType() const
 {
 	return battlefieldType;
@@ -766,6 +774,43 @@ const IBonusBearer * BattleInfo::asBearer() const
 {
 	return this;
 }
+
+void BattleInfo::updateUnit(const CStackStateInfo & changes)
+{
+	CStack * changedStack = getStack(changes.stackId, false);
+	if(!changedStack)
+		throw std::runtime_error("Invalid stack id in BattleInfo update");
+
+	//checking if we resurrect a stack that is under a living stack
+	auto accessibility = getAccesibility();
+
+	if(!changedStack->alive() && !accessibility.accessible(changedStack->getPosition(), changedStack))
+	{
+		logNetwork->error("Cannot resurrect %s because hex %d is occupied!", changedStack->nodeName(), changedStack->getPosition().hex);
+		return; //position is already occupied
+	}
+
+	//applying changes
+	bool resurrected = !changedStack->alive(); //indicates if stack is resurrected or just healed
+
+	changedStack->stackState.fromInfo(changes);
+
+	if(resurrected)
+	{
+		//removing all spells effects
+		auto selector = [](const Bonus * b)
+		{
+			//Special case: DISRUPTING_RAY is "immune" to dispell
+			//Other even PERMANENT effects can be removed
+			if(b->source == Bonus::SPELL_EFFECT)
+				return b->sid != SpellID::DISRUPTING_RAY;
+			else
+				return false;
+		};
+		changedStack->popBonuses(selector);
+	}
+}
+
 
 CArmedInstance * BattleInfo::battleGetArmyObject(ui8 side) const
 {

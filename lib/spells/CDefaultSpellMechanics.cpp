@@ -298,7 +298,7 @@ void DefaultSpellMechanics::applyEffectsForced(const SpellCastEnvironment * env,
 	{
 		SetStackEffect sse;
 		defaultTimedEffect(env, parameters, sse, stacks);
-		if(!sse.stacks.empty())
+		if(!(sse.toAdd.empty() && sse.toUpdate.empty()))
 			env->sendAndApply(&sse);
 	}
 }
@@ -327,22 +327,27 @@ void DefaultSpellMechanics::defaultTimedEffect(const SpellCastEnvironment * env,
 {
 	//get default spell duration (spell power with bonuses for heroes)
 	int duration = parameters.effectDuration;
+
+	std::vector<Bonus> normal;
+	std::vector<Bonus> cumulative;
+
 	//generate actual stack bonuses
 	{
 		si32 maxDuration = 0;
 
-		owner->getEffects(sse.effect, parameters.effectLevel, false, duration, &maxDuration);
-		owner->getEffects(sse.cumulativeEffects, parameters.effectLevel, true, duration, &maxDuration);
+		owner->getEffects(normal, parameters.effectLevel, false, duration, &maxDuration);
+		owner->getEffects(cumulative, parameters.effectLevel, true, duration, &maxDuration);
 
 		//if all spell effects have special duration, use it later for special bonuses
 		duration = maxDuration;
 	}
 
 	//we need to know who cast Bind
-	if(owner->id == SpellID::BIND && casterStack)
+	if(owner->id == SpellID::BIND && casterStack && !normal.empty())
 	{
-		sse.effect.at(sse.effect.size() - 1).additionalInfo = casterStack->ID;
+		normal.at(normal.size() - 1).additionalInfo = casterStack->ID;
 	}
+
 	std::shared_ptr<Bonus> bonus = nullptr;
 	auto casterHero = dynamic_cast<const CGHeroInstance *>(caster);
 	if(casterHero)
@@ -352,7 +357,13 @@ void DefaultSpellMechanics::defaultTimedEffect(const SpellCastEnvironment * env,
 	for(const IStackState * affected : target)
 	{
 		si32 power = 0;
-		sse.stacks.push_back(affected->unitId());
+		uint32_t unitId = affected->unitId();
+
+		std::vector<Bonus> toAdd;
+		std::copy(cumulative.begin(), cumulative.end(), std::back_inserter(toAdd));
+
+		std::vector<Bonus> toUpdate;
+		std::copy(normal.begin(), normal.end(), std::back_inserter(toUpdate));
 
 		//Apply hero specials - peculiar enchants
 		const auto tier = std::max(affected->creatureLevel(), 1); //don't divide by 0 for certain creatures (commanders, war machines)
@@ -377,19 +388,19 @@ void DefaultSpellMechanics::defaultTimedEffect(const SpellCastEnvironment * env,
 						power = 1;
 						break;
 					}
-					for(const Bonus & b : sse.effect)
+					for(const Bonus & b : normal)
 					{
 						Bonus specialBonus(b);
 						specialBonus.val = power; //it doesn't necessarily make sense for some spells, use it wisely
 						specialBonus.turnsRemain = duration;
-						sse.uniqueBonuses.push_back(std::pair<ui32, Bonus>(affected->unitId(), specialBonus)); //additional premy to given effect
+						toUpdate.push_back(specialBonus);//additional premy to given effect
 					}
-					for(const Bonus & b : sse.cumulativeEffects)
+					for(const Bonus & b : cumulative)
 					{
 						Bonus specialBonus(b);
 						specialBonus.val = power; //it doesn't necessarily make sense for some spells, use it wisely
 						specialBonus.turnsRemain = duration;
-						sse.cumulativeUniqueBonuses.push_back(std::pair<ui32, Bonus>(affected->unitId(), specialBonus)); //additional premy to given effect
+						toAdd.push_back(specialBonus);//additional premy to given effect
 					}
 				}
 				break;
@@ -398,7 +409,7 @@ void DefaultSpellMechanics::defaultTimedEffect(const SpellCastEnvironment * env,
 					power = std::max(5 - tier, 0);
 					Bonus specialBonus(Bonus::N_TURNS, Bonus::PRIMARY_SKILL, Bonus::SPELL_EFFECT, power, owner->id, PrimarySkill::ATTACK);
 					specialBonus.turnsRemain = duration;
-					sse.uniqueBonuses.push_back(std::pair<ui32,Bonus>(affected->unitId(), specialBonus)); //additional attack to Slayer effect
+					toUpdate.push_back(specialBonus); //additional attack to Slayer effect
 				}
 				break;
 			}
@@ -408,8 +419,11 @@ void DefaultSpellMechanics::defaultTimedEffect(const SpellCastEnvironment * env,
 			int damagePercent = casterHero->level * casterHero->valOfBonuses(Bonus::SPECIAL_BLESS_DAMAGE, owner->id.toEnum()) / tier;
 			Bonus specialBonus(Bonus::N_TURNS, Bonus::CREATURE_DAMAGE, Bonus::SPELL_EFFECT, damagePercent, owner->id, 0, Bonus::PERCENT_TO_ALL);
 			specialBonus.turnsRemain = duration;
-			sse.uniqueBonuses.push_back(std::pair<ui32,Bonus>(affected->unitId(), specialBonus));
+			toUpdate.push_back(specialBonus);
 		}
+
+		sse.toAdd.push_back(std::make_pair(unitId, toAdd));
+		sse.toUpdate.push_back(std::make_pair(unitId, toUpdate));
 	}
 }
 
@@ -666,7 +680,7 @@ void RegularSpellMechanics::applyBattleEffects(const SpellCastEnvironment * env,
 		SetStackEffect sse;
 		defaultTimedEffect(env, parameters, sse, affected);
 
-		if(!sse.stacks.empty())
+		if(!(sse.toAdd.empty() && sse.toUpdate.empty()))
 			env->sendAndApply(&sse);
 	}
 }

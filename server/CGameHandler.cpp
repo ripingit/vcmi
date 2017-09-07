@@ -3949,10 +3949,11 @@ bool CGameHandler::makeBattleAction(BattleAction &ba)
 
 			sse.battleLog.push_back(text);
 
-			sse.effect.push_back(bonus1);
-			sse.effect.push_back(bonus2);
+			std::vector<Bonus> buffer;
+			buffer.push_back(bonus1);
+			buffer.push_back(bonus2);
 
-			sse.stacks.push_back(ba.stackNumber);
+			sse.toUpdate.push_back(std::make_pair(ba.stackNumber, buffer));
 			sendAndApply(&sse);
 
 			//don't break - we share code with next case

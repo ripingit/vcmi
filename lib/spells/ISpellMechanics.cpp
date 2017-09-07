@@ -204,7 +204,7 @@ Destination::Destination()
 
 }
 
-Destination::Destination(const CStack * destination)
+Destination::Destination(const IStackState * destination)
 	: stackValue(destination),
 	hexValue(destination->getPosition())
 {

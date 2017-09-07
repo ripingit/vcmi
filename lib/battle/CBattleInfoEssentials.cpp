@@ -93,6 +93,12 @@ TStacks CBattleInfoEssentials::battleGetStacksIf(TStackFilter predicate) const
 	return getBattle()->getStacksIf(predicate);
 }
 
+battle::Units CBattleInfoEssentials::battleGetUnitsIf(battle::UnitFilter predicate)  const
+{
+	RETURN_IF_NOT_BATTLE(battle::Units());
+	return getBattle()->getUnitsIf(predicate);
+}
+
 TStacks CBattleInfoEssentials::battleAliveStacks() const
 {
 	return battleGetStacksIf([](const CStack * s)

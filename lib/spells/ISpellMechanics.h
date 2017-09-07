@@ -46,14 +46,14 @@ class DLL_LINKAGE Destination
 public:
 	Destination();
 	~Destination() = default;
-	explicit Destination(const CStack * destination);
+	explicit Destination(const IStackState * destination);
 	explicit Destination(const BattleHex & destination);
 
 	Destination(const Destination & other);
 
 	Destination & operator=(const Destination & other);
 
-	const CStack * stackValue;
+	const IStackState * stackValue;
 	BattleHex hexValue;
 };
 

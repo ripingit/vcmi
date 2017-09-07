@@ -64,6 +64,8 @@ public:
 
 	TStacks getStacksIf(TStackFilter predicate) const override;
 
+	battle::Units getUnitsIf(battle::UnitFilter predicate) const override;
+
 	BFieldType getBattlefieldType() const override;
 	ETerrainType getTerrainType() const override;
 
@@ -84,6 +86,11 @@ public:
 	int32_t getEnchanterCounter(ui8 side) const override;
 
 	const IBonusBearer * asBearer() const override;
+
+	//////////////////////////////////////////////////////////////////////////
+	// IBattleState
+
+	void updateUnit(const CStackStateInfo & changes) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	CStack * getStack(int stackID, bool onlyAlive = true);

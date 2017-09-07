@@ -130,8 +130,9 @@ void CustomSpellMechanics::cast(const SpellCastEnvironment * env, const BattleCa
 		return false;
 	};
 
-	auto filterStack = [&](const CStack * s)
+	auto filterStack = [&](uint32_t id)
 	{
+		const CStack * s = cb->battleGetStackByID(id, false);
 		if(stackResisted(s))
 			resisted.push_back(s);
 		else if(stackReflected(s))
@@ -144,13 +145,13 @@ void CustomSpellMechanics::cast(const SpellCastEnvironment * env, const BattleCa
 	auto toApply = effects->prepare(this, parameters, spellTarget);
 
 	//collect stacks from targets of all effects
-	std::set<const CStack *> stacks;
+	std::set<uint32_t> stacks;
 
 	for(const auto & p : toApply)
 	{
 		for(const Destination & d : p.second)
 			if(d.stackValue)
-				stacks.insert(d.stackValue);
+				stacks.insert(d.stackValue->unitId());
 	}
 
 	//process them
@@ -192,7 +193,16 @@ void CustomSpellMechanics::cast(const SpellCastEnvironment * env, const BattleCa
 void CustomSpellMechanics::cast(IBattleState * battleState, const BattleCast & parameters) const
 {
 	//TODO:  CustomSpellMechanics::cast
+
+	//TODO: evaluate caster updates (mana usage etc.)
+	//TODO: evaluate random values
+
 	Target spellTarget = transformSpellTarget(parameters.target, parameters.spellLvl);
+
+	auto toApply = effects->prepare(this, parameters, spellTarget);
+
+//	for(auto & p : toApply)
+//		p.first->apply(env, env->getRandomGenerator(), this, parameters, p.second);
 }
 
 Target CustomSpellMechanics::transformSpellTarget(const Target & aimPoint, const int spellLevel) const
