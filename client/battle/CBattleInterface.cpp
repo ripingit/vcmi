@@ -1276,24 +1276,32 @@ void CBattleInterface::spellCast(const BattleSpellCast *sc)
 	if (!castSoundPath.empty())
 		CCS->soundh->playSound(castSoundPath);
 
+	const auto casterStackID = sc->casterStack;
+	const CStack * casterStack = nullptr;
+	if(casterStackID > 0)
+	{
+		casterStack = curInt->cb->battleGetStackByID(casterStackID);
+	}
+
 	Point srccoord = (sc->side ? Point(770, 60) : Point(30, 60)) + pos;	//hero position by default
 	{
-		const auto casterStackID = sc->casterStack;
-
-		if (casterStackID > 0)
+		if(casterStack != nullptr)
 		{
-			const CStack *casterStack = curInt->cb->battleGetStackByID(casterStackID);
-			if (casterStack != nullptr)
-			{
-				srccoord = CClickableHex::getXYUnitAnim(casterStack->position, casterStack, this);
-				srccoord.x += 250;
-				srccoord.y += 240;
-			}
+			srccoord = CClickableHex::getXYUnitAnim(casterStack->position, casterStack, this);
+			srccoord.x += 250;
+			srccoord.y += 240;
 		}
 	}
 
-	//todo: play custom cast animation
-	displaySpellCast(spellID, BattleHex::INVALID);
+	if(casterStack != nullptr)
+	{
+		//todo: custom cast animation for hero
+		displaySpellCast(spellID, casterStack->position);
+
+		addNewAnim(new CCastAnimation(this, casterStack, sc->tile, curInt->cb->battleGetStackByPos(sc->tile)));
+	}
+
+	waitForAnims(); //wait for cast animation
 
 	//playing projectile animation
 	if (sc->tile.isValid())
@@ -1328,7 +1336,8 @@ void CBattleInterface::spellCast(const BattleSpellCast *sc)
 			addNewAnim(new CEffectAnimation(this, animToDisplay, srccoord.x, srccoord.y, dx, dy, Vflip));
 		}
 	}
-	waitForAnims();
+
+	waitForAnims(); //wait for projectile animation
 
 	displaySpellHit(spellID, sc->tile);
 

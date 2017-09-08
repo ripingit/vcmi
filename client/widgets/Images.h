@@ -197,8 +197,15 @@ public:
 		CAST_DOWN=19,
 		MOVE_START=20,
 		MOVE_END=21,
-		DEAD = 22 // new group, used to show dead stacks. If empty - last frame from "DEATH" will be copied here
 
+		DEAD = 22, // new group, used to show dead stacks. If empty - last frame from "DEATH" will be copied here
+
+		VCMI_CAST_UP    = 30,
+		VCMI_CAST_FRONT = 31,
+		VCMI_CAST_DOWN  = 32,
+		VCMI_2HEX_UP    = 40,
+		VCMI_2HEX_FRONT = 41,
+		VCMI_2HEX_DOWN  = 42
 	};
 
 private:
