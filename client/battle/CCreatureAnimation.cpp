@@ -128,9 +128,6 @@ CCreatureAnim::EAnimType CCreatureAnimation::getType() const
 
 void CCreatureAnimation::setType(CCreatureAnim::EAnimType type)
 {
-	assert(type >= 0);
-	assert(framesInGroup(type) != 0);
-
 	this->type = type;
 	currentFrame = 0;
 	once = false;
@@ -191,6 +188,7 @@ bool CCreatureAnimation::incrementFrame(float timePassed)
 {
 	elapsedTime += timePassed;
 	currentFrame += timePassed * speed;
+
 	if (currentFrame >= float(framesInGroup(type)))
 	{
 		// just in case of extremely low fps (or insanely high speed)
@@ -271,7 +269,7 @@ void CCreatureAnimation::genBorderPalette(IImage::BorderPallete & target)
 	target[2] = addColors(genShadow(64),  genBorderColor(getBorderStrength(elapsedTime), border));
 }
 
-void CCreatureAnimation::nextFrame(SDL_Surface *dest, bool attacker)
+void CCreatureAnimation::nextFrame(SDL_Surface * dest, bool attacker)
 {
 	size_t frame = floor(currentFrame);
 
@@ -282,12 +280,15 @@ void CCreatureAnimation::nextFrame(SDL_Surface *dest, bool attacker)
 	else
 		image = reverse->getImage(frame, type);
 
-	IImage::BorderPallete borderPallete;
-	genBorderPalette(borderPallete);
+	if(image)
+	{
+		IImage::BorderPallete borderPallete;
+		genBorderPalette(borderPallete);
 
-	image->setBorderPallete(borderPallete);
+		image->setBorderPallete(borderPallete);
 
-	image->draw(dest, pos.x, pos.y);
+		image->draw(dest, pos.x, pos.y);
+	}
 }
 
 int CCreatureAnimation::framesInGroup(CCreatureAnim::EAnimType group) const
