@@ -241,7 +241,12 @@ std::string CDefenceAnimation::getMySound()
 CCreatureAnim::EAnimType CDefenceAnimation::getMyAnimType()
 {
 	if(killed)
-		return CCreatureAnim::DEATH;
+	{
+		if(rangedAttack && myAnim->framesInGroup(CCreatureAnim::DEATH_RANGED) > 0)
+			return CCreatureAnim::DEATH_RANGED;
+		else
+			return CCreatureAnim::DEATH;
+	}
 
 	if(vstd::contains(stack->state, EBattleStackState::DEFENDING_ANIM))
 		return CCreatureAnim::DEFENCE;
@@ -272,7 +277,10 @@ void CDefenceAnimation::endAnim()
 {
 	if(killed)
 	{
-		myAnim->setType(CCreatureAnim::DEAD);
+		if(rangedAttack && myAnim->framesInGroup(CCreatureAnim::DEAD_RANGED) > 0)
+			myAnim->setType(CCreatureAnim::DEAD_RANGED);
+		else
+			myAnim->setType(CCreatureAnim::DEAD);
 	}
 	else
 	{

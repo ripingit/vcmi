@@ -181,7 +181,7 @@ public:
 		HITTED=3,
 		DEFENCE=4,
 		DEATH=5,
-		//DEATH2=6, //unused?
+		DEATH_RANGED=6,
 		TURN_L=7,
 		TURN_R=8, //same
 		//TURN_L2=9, //identical to previous?
@@ -199,6 +199,7 @@ public:
 		MOVE_END=21,
 
 		DEAD = 22, // new group, used to show dead stacks. If empty - last frame from "DEATH" will be copied here
+		DEAD_RANGED = 23, // new group, used to show dead stacks (if DEATH_RANGED was used). If empty - last frame from "DEATH_RANGED" will be copied here
 
 		VCMI_CAST_UP    = 30,
 		VCMI_CAST_FRONT = 31,

@@ -159,6 +159,12 @@ CCreatureAnimation::CCreatureAnimation(const std::string & name_, TSpeedControll
 		reverse->duplicateImage(CCreatureAnim::DEATH, reverse->size(CCreatureAnim::DEATH)-1, CCreatureAnim::DEAD);
 	}
 
+	if(forward->size(CCreatureAnim::DEAD_RANGED) == 0 && forward->size(CCreatureAnim::DEATH_RANGED) != 0)
+	{
+		forward->duplicateImage(CCreatureAnim::DEATH_RANGED, forward->size(CCreatureAnim::DEATH_RANGED)-1, CCreatureAnim::DEAD_RANGED);
+		reverse->duplicateImage(CCreatureAnim::DEATH_RANGED, reverse->size(CCreatureAnim::DEATH_RANGED)-1, CCreatureAnim::DEAD_RANGED);
+	}
+
 	//TODO: get dimensions form CAnimation
 	IImage * first = forward->getImage(0, type, true);
 
@@ -299,7 +305,9 @@ int CCreatureAnimation::framesInGroup(CCreatureAnim::EAnimType group) const
 bool CCreatureAnimation::isDead() const
 {
 	return getType() == CCreatureAnim::DEAD
-	    || getType() == CCreatureAnim::DEATH;
+	    || getType() == CCreatureAnim::DEATH
+	    || getType() == CCreatureAnim::DEAD_RANGED
+	    || getType() == CCreatureAnim::DEATH_RANGED;
 }
 
 bool CCreatureAnimation::isIdle() const
