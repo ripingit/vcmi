@@ -1278,7 +1278,7 @@ void CBattleInterface::spellCast(const BattleSpellCast * sc)
 
 	const auto casterStackID = sc->casterStack;
 	const CStack * casterStack = nullptr;
-	if(casterStackID > 0)
+	if(casterStackID >= 0)
 	{
 		casterStack = curInt->cb->battleGetStackByID(casterStackID);
 	}

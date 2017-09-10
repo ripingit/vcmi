@@ -72,6 +72,9 @@ float AnimationControls::getCreatureAnimationSpeed(const CCreature * creature, c
 	case CCreatureAnim::CAST_UP:
 	case CCreatureAnim::CAST_FRONT:
 	case CCreatureAnim::CAST_DOWN:
+	case CCreatureAnim::VCMI_CAST_DOWN:
+	case CCreatureAnim::VCMI_CAST_FRONT:
+	case CCreatureAnim::VCMI_CAST_UP:
 		return speed * 4 * creature->animation.attackAnimationTime / anim->framesInGroup(type);
 
 	// as strange as it looks like "attackAnimationTime" does not affects melee attacks
@@ -82,6 +85,10 @@ float AnimationControls::getCreatureAnimationSpeed(const CCreature * creature, c
 	case CCreatureAnim::HITTED:
 	case CCreatureAnim::DEFENCE:
 	case CCreatureAnim::DEATH:
+	case CCreatureAnim::DEATH_RANGED:
+	case CCreatureAnim::VCMI_2HEX_DOWN:
+	case CCreatureAnim::VCMI_2HEX_FRONT:
+	case CCreatureAnim::VCMI_2HEX_UP:
 		return speed * 3 / anim->framesInGroup(type);
 
 	case CCreatureAnim::TURN_L:
@@ -93,11 +100,11 @@ float AnimationControls::getCreatureAnimationSpeed(const CCreature * creature, c
 		return speed / 3;
 
 	case CCreatureAnim::DEAD:
+	case CCreatureAnim::DEAD_RANGED:
 		return speed;
 
 	default:
-		assert(0);
-		return 1;
+		return speed;
 	}
 }
 
