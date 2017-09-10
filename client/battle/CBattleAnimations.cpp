@@ -996,6 +996,17 @@ bool CCastAnimation::init()
 			group = CCreatureAnim::CAST_FRONT;
 	}
 
+	//fall back to ranged attack
+	if(myAnim->framesInGroup(group) == 0)
+	{
+		if(projectileAngle > straightAngle)
+			group = CCreatureAnim::SHOOT_UP;
+		else if(projectileAngle < -straightAngle)
+			group = CCreatureAnim::SHOOT_DOWN;
+		else
+			group = CCreatureAnim::SHOOT_FRONT;
+	}
+
 	//fall back to normal attack
 	if(myAnim->framesInGroup(group) == 0)
 	{

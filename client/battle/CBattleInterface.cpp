@@ -1266,7 +1266,7 @@ void CBattleInterface::displayBattleFinished()
 	curInt->waitWhileDialog(); // Avoid freeze when AI end turn after battle. Check bug #1897
 }
 
-void CBattleInterface::spellCast(const BattleSpellCast *sc)
+void CBattleInterface::spellCast(const BattleSpellCast * sc)
 {
 	const SpellID spellID(sc->id);
 	const CSpell & spell = *spellID.toSpell();
@@ -1293,7 +1293,7 @@ void CBattleInterface::spellCast(const BattleSpellCast *sc)
 		}
 	}
 
-	if(casterStack != nullptr)
+	if(casterStack != nullptr && sc->activeCast)
 	{
 		//todo: custom cast animation for hero
 		displaySpellCast(spellID, casterStack->position);
