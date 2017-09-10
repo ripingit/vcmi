@@ -981,13 +981,30 @@ bool CCastAnimation::init()
 		group = CCreatureAnim::VCMI_CAST_UP;
 	else if(projectileAngle < -straightAngle)
 		group = CCreatureAnim::VCMI_CAST_DOWN;
-	else //straight shot
+	else
 		group = CCreatureAnim::VCMI_CAST_FRONT;
 
+	//fall back to H3 cast/2hex
+	//even if creature have 2hex attack instead of cast it is ok since we fall back to attack anyway
 	if(myAnim->framesInGroup(group) == 0)
 	{
-		endAnim();
-		return false;
+		if(projectileAngle > straightAngle)
+			group = CCreatureAnim::CAST_UP;
+		else if(projectileAngle < -straightAngle)
+			group = CCreatureAnim::CAST_DOWN;
+		else
+			group = CCreatureAnim::CAST_FRONT;
+	}
+
+	//fall back to normal attack
+	if(myAnim->framesInGroup(group) == 0)
+	{
+		if(projectileAngle > straightAngle)
+			group = CCreatureAnim::ATTACK_UP;
+		else if(projectileAngle < -straightAngle)
+			group = CCreatureAnim::ATTACK_DOWN;
+		else
+			group = CCreatureAnim::ATTACK_FRONT;
 	}
 
 	return true;
